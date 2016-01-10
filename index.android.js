@@ -18,9 +18,7 @@ var getMeHighMobile = React.createClass({
 
   getInitialState: function(){
       return {
-          shops: [
-              {name: 'Loading shops', id: '1234'}
-          ],
+          shops: [],
           lastPosition: 'unknown',
           theOne: 'unknown'
     }
