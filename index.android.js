@@ -10,7 +10,8 @@ var {
   StyleSheet,
   Text,
   View,
-  ScrollView
+  ScrollView,
+  TouchableHighlight
 } = React;
 
 var getMeHighMobile = React.createClass({
@@ -25,11 +26,11 @@ var getMeHighMobile = React.createClass({
     }
   },
   componentDidMount: function(){
-      fetch('http://192.168.2.6:3000/shops')
+      fetch('http://ramongebben.github.io/getmehigh/data/shops.json')
         .then(res => res.json())
-        .then(shops =>{
-            this.setState({ shops });
-            console.log(shops);
+        .then(body => {
+            console.log(body.shops)
+            this.setState({shops: body.shops})
         });
         this._getGeoLocation();
   },
@@ -43,12 +44,10 @@ var getMeHighMobile = React.createClass({
               lat: position.coords.latitude,
               lng: position.coords.longitude
           }});
-          this._getMeHigh()
       });
   },
   _getMeHigh: function(){
       this.findShop((theOne => {
-        console.log(theOne);
         this.setState({
             theOne: theOne
         });
@@ -77,19 +76,19 @@ var getMeHighMobile = React.createClass({
       if(holaback) holaback(theOne);
   },
   render: function() {
-    var shops = this.state.shops.map((shop) => {
+    var shops = this.state.shops.map((shop, i) => {
         return(<Text key={shop.id} style={styles.instructions}>{shop.name}</Text>)
     });
+
+    var gmhButton;
+    if( this.state.lastPosition !== 'unknown' && this.state.shops.length > 1 ){
+        gmhButton = <TouchableHighlight style={styles.button} onPress={this._getMeHigh}><Text style={styles.buttonText}>Get Me High</Text></TouchableHighlight>
+    }
     return (
-      <View>
+      <View style={styles.container}>
           <Text>location: {JSON.stringify(this.state.lastPosition)}</Text>
           <Text>TheOne: {JSON.stringify(this.state.theOne)}</Text>
-          <ScrollView
-            automaticallyAdjustContentInsets={false}
-            scrollEventThrottle={200}
-            style={styles.scrollView}>
-            {shops}
-          </ScrollView>
+          {gmhButton}
       </View>
     );
   }
@@ -101,11 +100,22 @@ var styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+    padding: 20
   },
   welcome: {
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
+  },
+  button: {
+      padding: 10,
+      margin: 20,
+      backgroundColor: '#7A1496'
+  },
+  buttonText: {
+      fontSize: 20,
+      color: '#F5FCFF',
+      textAlign: 'center'
   },
   scrollView: {
       height: 300,
