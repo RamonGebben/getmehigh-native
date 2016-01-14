@@ -104,7 +104,7 @@ var getMeHighMobile = React.createClass({
             zoomLevel={10}
             onMapChange={(e) => console.log(e)}
             onMapError={(e) => console.log('Map error --> ', e)}
-            center={ { lng: 0.1, lat: 51.0 } }
+            center={ { lng: 52.3521678, lat: 4.8587894 } }
             /*
              * clickMarker shows Info Window of Marker with id: 0,
              * hides Info Window if given null
