@@ -3,6 +3,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-library android:name="com.google.android.maps" />
+    <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="AIzaSyBGlSH0Z44rw4fniavK7IXXIAoSRYYu5G4"/>    
 
     <application
       android:allowBackup="true"
