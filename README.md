@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-[sudo] npm i react-native -g
+[sudo] npm i react-native-cli -g
 npm i
 ```
 
