@@ -6,6 +6,7 @@
 
 var React = require('react-native');
 var RNGMap = require('react-native-gmaps');
+var Polyline = require('react-native-gmaps/Polyline');
 var {
   AppRegistry,
   StyleSheet,
@@ -74,45 +75,54 @@ var getMeHighMobile = React.createClass({
       });
       if(holaback) holaback(theOne);
   },
+  onMapChange: function(e){
+      console.log(e);
+  },
+  onMapError: function(e){
+      console.log('map error -->', e);
+  },
   render: function() {
-    var shops = this.state.shops.map((shop, i) => {
-        return(<Text key={shop.id} style={styles.instructions}>{shop.name}</Text>)
-    });
 
-    var gmhButton;
-    if( this.state.lastPosition !== 'unknown' && this.state.shops.length > 1 ){
-        gmhButton = <TouchableHighlight style={styles.button} onPress={this._getMeHigh}><Text style={styles.buttonText}>Get Me High</Text></TouchableHighlight>
+    if( this.state.theOne !== 'unknown') {
+        return this._renderMap();
+    }else {
+        return this._renderStart();
     }
-    return (
-      <View style={styles.container}>
-          <Text>location: {JSON.stringify(this.state.lastPosition)}</Text>
-          <Text>TheOne: {JSON.stringify(this.state.theOne)}</Text>
-          {gmhButton}
-          <RNGMap
-            ref={'gmap'}
-            style={ { height: 500, width: 500 } }
-            markers={ [
-                  { coordinates: {lng: 0.1, lat: 51.0} },
-                  {
-                    coordinates: {lng: -0.1, lat: 51.0},
-                    title: "Click marker to see this title!",
-                    snippet: "Subtitle",
-                    id: 0,
-                    color: 120,
-                  }
-              ] }
-            zoomLevel={10}
-            onMapChange={(e) => console.log(e)}
-            onMapError={(e) => console.log('Map error --> ', e)}
-            center={ { lng: 52.3521678, lat: 4.8587894 } }
-            /*
-             * clickMarker shows Info Window of Marker with id: 0,
-             * hides Info Window if given null
-             */
-            clickMarker={0}/>
-      </View>
-    );
+  },
+  _renderStart: function(){
+      if( this.state.lastPosition !== 'unknown' && this.state.shops.length > 1 ){
+          return(
+              <View style={styles.container}>
+                  <TouchableHighlight style={styles.button} onPress={this._getMeHigh}>
+                    <Text style={styles.buttonText}>Get Me High</Text>
+                  </TouchableHighlight>
+              </View>);
+      }else {
+          return(<View style={styles.container}>
+            <Text style={styles.text}>Getting your location</Text>
+          </View>);
+      }
+  },
+  _renderMap: function(){
+      return (<RNGMap
+        ref={'gmap'}
+        style={ styles.map }
+        markers={ [
+              {
+                coordinates: this.state.theOne.location,
+                title: this.state.theOne.name,
+                snippet: "Subtitle",
+                id: 0,
+                color: 120,
+              }
+          ] }
+        zoomLevel={ 13 }
+        onMapChange={(e) => console.log(e)}
+        onMapError={(e) => console.log('Map error --> ', e)}
+        center={ this.state.lastPosition }
+        clickMarker={0} />);
   }
+
 });
 
 var styles = StyleSheet.create({
@@ -123,18 +133,26 @@ var styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
     padding: 20
   },
-  welcome: {
+  text: {
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
   },
+  map: {
+    flex: 1
+  },
   button: {
-      padding: 10,
+      padding: 60,
       margin: 20,
-      backgroundColor: '#7A1496'
+      width: 300,
+      height: 300,
+      backgroundColor: '#7A1496',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 300
   },
   buttonText: {
-      fontSize: 20,
+      fontSize: 60,
       color: '#F5FCFF',
       textAlign: 'center'
   },
