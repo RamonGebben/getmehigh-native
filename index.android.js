@@ -6,7 +6,16 @@
 
 var React = require('react-native');
 var RNGMap = require('react-native-gmaps');
+var MK = require('react-native-material-kit');
 var Polyline = require('react-native-gmaps/Polyline');
+
+var {
+  MKButton,
+  MKColor,
+  mdl,
+  MKCardStyles
+} = MK;
+
 var {
   AppRegistry,
   StyleSheet,
@@ -15,6 +24,11 @@ var {
   ScrollView,
   TouchableHighlight
 } = React;
+
+MK.setTheme({
+  primaryColor: MKColor.Teal,
+  accentColor: MKColor.Purple,
+});
 
 var getMeHighMobile = React.createClass({
 
@@ -90,15 +104,19 @@ var getMeHighMobile = React.createClass({
     }
   },
   _renderStart: function(){
+      var ColoredFlatButton =  MKButton.coloredButton()
+          .withText('Get Me High')
+          .withTextStyle(styles.buttonText)
+          .withOnPress(this._getMeHigh)
+          .build();
       if( this.state.lastPosition !== 'unknown' && this.state.shops.length > 1 ){
           return(
               <View style={styles.container}>
-                  <TouchableHighlight style={styles.button} onPress={this._getMeHigh}>
-                    <Text style={styles.buttonText}>Get Me High</Text>
-                  </TouchableHighlight>
+                <ColoredFlatButton />
               </View>);
       }else {
           return(<View style={styles.container}>
+            <mdl.Spinner style={styles.spinner}/>
             <Text style={styles.text}>Getting your location</Text>
           </View>);
       }
@@ -152,12 +170,21 @@ var styles = StyleSheet.create({
       borderRadius: 300
   },
   buttonText: {
-      fontSize: 60,
-      color: '#F5FCFF',
-      textAlign: 'center'
+      fontSize: 30
   },
   scrollView: {
       height: 300,
+  },
+  legendLabel: {
+    textAlign: 'center',
+    color: '#666666',
+    marginTop: 10, marginBottom: 20,
+    fontSize: 12,
+    fontWeight: '300',
+  },
+  spinner: {
+    width: 120,
+    height: 120,
   },
   instructions: {
     textAlign: 'center',
