@@ -22,21 +22,30 @@ var {
   Text,
   View,
   ScrollView,
-  TouchableHighlight
+  TouchableHighlight,
+  BackAndroid
 } = React;
 
 MK.setTheme({
-  primaryColor: MKColor.Teal,
+  primaryColor: MKColor.Pink,
   accentColor: MKColor.Purple,
 });
+
+const SliderWithValue = mdl.Slider.slider()
+  .withMin(5)
+  .withMax(500)
+  .build();
 
 var getMeHighMobile = React.createClass({
 
   getInitialState: function(){
       return {
           shops: [],
-          lastPosition: 'unknown',
-          theOne: 'unknown'
+          lastPosition: null,
+          theOne: 'unknown',
+          searchRadius: 5,
+          withinRadius: [],
+          history: ['start']
     }
   },
   componentDidMount: function(){
@@ -47,6 +56,9 @@ var getMeHighMobile = React.createClass({
             this.setState({shops: body.shops})
         });
         this._getGeoLocation();
+        BackAndroid.addEventListener('hardwareBackPress', () => {
+            return false; 
+        });
   },
 
   componentWillUnmount: function() {
@@ -61,11 +73,20 @@ var getMeHighMobile = React.createClass({
       });
   },
   _getMeHigh: function(){
-      this.findShop((theOne => {
-        this.setState({
-            theOne: theOne
-        });
-      }));
+      if( this.state.lastPosition && this.state.shops.length > 0 ){
+          this.findShops((withinRadius => {
+            let newHistory = this.state.history;
+            newHistory.pop(); // Remove the loading screen;
+            newHistory.push('map');
+            this.setState({ withinRadius, history: newHistory });
+          }));
+      }else {
+          this.state.history.push('loading');
+          setTimeout(() => {
+              this._getMeHigh();
+          }, 1000);
+      }
+
   },
   getDistance: function(p1, p2) {
       // http://www.wikiwand.com/en/Haversine_formula
@@ -89,56 +110,78 @@ var getMeHighMobile = React.createClass({
       });
       if(holaback) holaback(theOne);
   },
+  findShops: function(holaback){
+      let withinRadius = this.state.shops.filter(( shop ) => {
+          shop.distance = this.getDistance( this.state.lastPosition, shop.location );
+          let distanceInKilometer = Math.ceil(shop.distance) / 1000;
+          if( distanceInKilometer < this.state.searchRadius ){
+              return shop;
+          }
+      });
+      if(holaback) holaback(withinRadius);
+  },
   onMapChange: function(e){
       console.log(e);
   },
   onMapError: function(e){
       console.log('map error -->', e);
   },
+  onRadiusChange: function(value){
+      this.setState({searchRadius: Math.ceil(value)});
+  },
   render: function() {
+      let route = this.state.history[this.state.history.length -1];
+      switch (route) {
+          case 'loading':
+            return this._renderLoading();
+          case 'start':
+              return this._renderStart();
+          case 'map':
+              return this._renderMap();
 
-    if( this.state.theOne !== 'unknown') {
-        return this._renderMap();
-    }else {
-        return this._renderStart();
-    }
+      }
   },
   _renderStart: function(){
-      var ColoredFlatButton =  MKButton.coloredButton()
+      var GetMeHighButton =  MKButton.coloredButton()
           .withText('Get Me High')
           .withTextStyle(styles.buttonText)
           .withOnPress(this._getMeHigh)
           .build();
-      if( this.state.lastPosition !== 'unknown' && this.state.shops.length > 1 ){
+
+
           return(
               <View style={styles.container}>
-                <ColoredFlatButton />
+              <Text>{ `Within ${this.state.searchRadius}km range` }</Text>
+              <SliderWithValue  ref='sliderWithValue'
+                                style={styles.slider}
+                                onChange={this.onRadiusChange} />
+                <GetMeHighButton />
               </View>);
-      }else {
-          return(<View style={styles.container}>
-            <mdl.Spinner style={styles.spinner}/>
-            <Text style={styles.text}>Getting your location</Text>
-          </View>);
-      }
+  },
+  _renderLoading: function(){
+        return(<View style={styles.container}>
+          <mdl.Spinner style={styles.spinner}/>
+          <Text style={styles.text}>Getting your location</Text>
+        </View>);
   },
   _renderMap: function(){
       return (<RNGMap
         ref={'gmap'}
         style={ styles.map }
-        markers={ [
-              {
-                coordinates: this.state.theOne.location,
-                title: this.state.theOne.name,
-                snippet: "Subtitle",
-                id: 0,
-                color: 120,
-              }
-          ] }
-        zoomLevel={ 13 }
-        onMapChange={(e) => console.log(e)}
-        onMapError={(e) => console.log('Map error --> ', e)}
-        center={ this.state.lastPosition }
-        clickMarker={0} />);
+        markers={ this.state.withinRadius.map(shop => {
+            let snippet = `${shop.adress} ${shop.city}`;
+            return {
+                coordinates: shop.location,
+                title: shop.name,
+                id: shop.id,
+                snippet: snippet,
+                color: 120
+            }
+        })}
+        zoomLevel={ 12 }
+        onMapChange={this.onMapChange}
+        onMapError={this.onMapError}
+        center={ this.state.lastPosition }/>);
   }
 
 });
@@ -159,21 +202,14 @@ var styles = StyleSheet.create({
   map: {
     flex: 1
   },
-  button: {
-      padding: 60,
-      margin: 20,
-      width: 300,
-      height: 300,
-      backgroundColor: '#7A1496',
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: 300
-  },
   buttonText: {
       fontSize: 30
   },
   scrollView: {
       height: 300,
+  },
+  slider: {
+      width: 300,
   },
   legendLabel: {
     textAlign: 'center',
